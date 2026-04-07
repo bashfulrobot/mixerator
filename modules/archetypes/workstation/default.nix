@@ -18,6 +18,7 @@ in
 
   config = lib.mkIf cfg.enable {
     suites.core.enable = true;
+    suites.terminal.enable = true;
     system.macos-defaults.enable = true;
     system.homebrew-integration.enable = true;
   };

@@ -1,0 +1,182 @@
+{
+  globals,
+  lib,
+  config,
+  ...
+}:
+
+let
+  cfg = config.apps.cli.fish;
+in
+{
+  options = {
+    apps.cli.fish.enable = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Enable fish shell via home-manager.";
+    };
+  };
+
+  config = lib.mkIf cfg.enable {
+
+    # Enable fish at system level (required for user shell)
+    programs.fish.enable = true;
+
+    # Home Manager user configuration
+    home-manager.users.${globals.user.name} = {
+
+      programs.fish = {
+        enable = true;
+
+        # Fish shell configuration
+        shellInit = ''
+          # Disable greeting
+          set fish_greeting
+        '';
+
+        # Shell aliases (for programmatic/script-facing use)
+        shellAliases = {
+          mdr = "glow -p";
+          ni = "nix run 'nixpkgs#nix-index' --extra-experimental-features 'nix-command flakes'";
+          nix-info = "nix-info --markdown --sandbox --host-os";
+        };
+
+        # Abbreviations expand in-place (visible before execution, editable)
+        shellAbbrs = {
+          gs = "git status";
+          gon = "cd ${globals.paths.mixerator}";
+          upgrade = "cd ${globals.paths.mixerator} && just upgrade";
+          rebuild = "cd ${globals.paths.mixerator} && just rebuild";
+        };
+
+        # Custom functions
+        functions = {
+          kcfg = ''
+            set -l clusters_dir "$HOME/.kube/clusters"
+            set -l active_config "$HOME/.kube/config"
+
+            if not test -d "$clusters_dir"
+              echo "Error: $clusters_dir directory does not exist"
+              return 1
+            end
+
+            set -l selected (find "$clusters_dir" -type f | fzf --prompt="Select kubeconfig: " --height=40% --border)
+
+            if test -n "$selected"
+              cp "$selected" "$active_config"
+              echo "✓ Activated kubeconfig: $(basename $selected)"
+            else
+              echo "No selection made"
+            end
+          '';
+
+          tcfg = ''
+            set -l clusters_dir "$HOME/.talos/clusters"
+            set -l active_config "$HOME/.talos/config"
+
+            if not test -d "$clusters_dir"
+              echo "Error: $clusters_dir directory does not exist"
+              return 1
+            end
+
+            set -l selected (find "$clusters_dir" -type f | fzf --prompt="Select talosconfig: " --height=40% --border)
+
+            if test -n "$selected"
+              cp "$selected" "$active_config"
+              echo "✓ Activated talosconfig: $(basename $selected)"
+            else
+              echo "No selection made"
+            end
+          '';
+
+          copy = ''
+            if test (count $argv) -gt 0
+              if not test -f "$argv[1]"
+                echo "Error: $argv[1] is not a file"
+                return 1
+              end
+              pbcopy < "$argv[1]"
+              echo "✓ Copied: $argv[1]"
+            else
+              set -l selected (fzf --prompt="Copy file: " --height=40% --border --preview="head -50 {}")
+              if test -n "$selected"
+                pbcopy < "$selected"
+                echo "✓ Copied: $selected"
+              else
+                echo "No selection made"
+              end
+            end
+          '';
+
+          af = ''
+            alias | fzf --prompt="Alias: " --height=40% --border
+          '';
+
+          ff = ''
+            functions | fzf --prompt="Function: " --height=40% --border
+          '';
+
+          mkcd = ''
+            mkdir -p $argv[1]; and cd $argv[1]
+          '';
+
+          kns = ''
+            set -l namespace (kubectl get namespaces -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | fzf --prompt="Select namespace: " --height=40% --border)
+
+            if test -n "$namespace"
+              kubectl config set-context --current --namespace="$namespace"
+              echo "✓ Switched to namespace: $namespace"
+            else
+              echo "No selection made"
+            end
+          '';
+
+          gsp = ''
+            if not git rev-parse --git-dir >/dev/null 2>&1
+              echo "Not a git repo"
+              return 1
+            end
+
+            set -l current_branch (git rev-parse --abbrev-ref HEAD)
+
+            git fetch origin
+
+            set -l local_only (git log "origin/$current_branch..$current_branch" --oneline 2>/dev/null)
+            set -l remote_only (git log "$current_branch..origin/$current_branch" --oneline 2>/dev/null)
+
+            if test -n "$local_only" -a -n "$remote_only"
+              echo "Diverged — local and remote both have commits:"
+              echo ""
+              echo "Local:"
+              echo "$local_only"
+              echo ""
+              echo "Remote:"
+              echo "$remote_only"
+              echo ""
+              echo "Resolve manually (rebase, merge, or force-push)."
+              return 1
+
+            else if test -n "$local_only"
+              echo "Pushing unpushed commits..."
+              git push origin "$current_branch"
+              echo "Pushed to origin/$current_branch"
+
+            else if test -n "$remote_only"
+              echo "Aligning git state with remote..."
+              git reset --hard "origin/$current_branch"
+              git clean -fd
+              echo "Git state aligned with origin/$current_branch"
+
+            else
+              echo "Already in sync with origin/$current_branch"
+            end
+
+            git status --short
+          '';
+        };
+      };
+
+    };
+
+  };
+}
