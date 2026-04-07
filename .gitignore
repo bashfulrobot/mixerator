@@ -1,0 +1,15 @@
+# Flake lock backups
+flake.lock-backup-*
+
+# Nix build artifacts
+result
+result-*
+
+# MCP config (project-level)
+.mcp.json
+
+# Claude Code local settings
+.claude/settings.local.json
+
+prompt.txt
+AGENTS.md
