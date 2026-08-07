@@ -15,4 +15,7 @@
 
   # Claude Code, with ~/.claude under Nix management + capture.
   apps.cli.claude-code.enable = true;
+
+  # Built from source for darwin here; upstream's flake is Linux-only.
+  apps.gui.upsight.enable = true;
 }

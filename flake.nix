@@ -18,6 +18,21 @@
       url = "github:lyndeno/apple-fonts.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # upsight, the Wails v3 + Svelte CSM desktop app. Private repo, so this
+    # needs SSH read access -- same git+ssh arrangement nixerator uses.
+    #
+    # Consumed for its SOURCE ONLY. Its flake gates `packages` behind
+    # `lib.optionalAttrs isLinux`, so `packages.aarch64-darwin` is empty and
+    # `inputs.upsight.packages.${system}.default` (what nixerator's module
+    # uses) does not exist here. The darwin derivation lives in
+    # modules/apps/gui/upsight/build/ instead.
+    #
+    # No `inputs.nixpkgs.follows`: upsight pins nixos-26.05 deliberately for
+    # reproducibility, and we don't build from its package set anyway.
+    upsight = {
+      url = "git+ssh://git@github.com/bashfulrobot/upsight?ref=main";
+    };
   };
 
   outputs =
@@ -26,10 +41,7 @@
       globals = import ./settings/globals.nix;
       secretsFile = "${self}/secrets/secrets.json";
       secrets =
-        if builtins.pathExists secretsFile then
-          builtins.fromJSON (builtins.readFile secretsFile)
-        else
-          { };
+        if builtins.pathExists secretsFile then builtins.fromJSON (builtins.readFile secretsFile) else { };
       lib = import ./lib { inherit inputs secrets; };
     in
     {
