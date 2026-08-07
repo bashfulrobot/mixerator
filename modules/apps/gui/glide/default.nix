@@ -14,10 +14,12 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # Install via Homebrew (not in nixpkgs)
+    # Install via Homebrew (not in nixpkgs). Glide ships as a cask, not a
+    # formula -- declaring it under `brews` made brew bundle look for a
+    # formula named glide, which does not exist, and fail the whole bundle.
     homebrew = {
       enable = true;
-      brews = [ "glide" ];
+      casks = [ "glide" ];
     };
 
     # User configuration
