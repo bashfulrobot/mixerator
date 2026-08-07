@@ -3,10 +3,10 @@ rec {
 
   # User configuration
   user = {
-    name = "dustin";
+    name = "dustin.krysak";
     fullName = "Dustin Krysak";
     email = "dustin@bashfulrobot.com";
-    homeDirectory = "/Users/dustin";
+    homeDirectory = "/Users/dustin.krysak";
   };
 
   # Common repository and development paths

@@ -5,7 +5,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
     nix-darwin = {
-      url = "github:LnL7/nix-darwin";
+      url = "github:nix-darwin/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -34,9 +34,9 @@
     in
     {
       darwinConfigurations = {
-        donkeykong = lib.mkHost {
+        MH36P2YMHX = lib.mkHost {
           inherit globals;
-          hostname = "donkeykong";
+          hostname = "MH36P2YMHX";
           system = "aarch64-darwin";
           extraModules = [ ];
           homeManagerModules = [ ];

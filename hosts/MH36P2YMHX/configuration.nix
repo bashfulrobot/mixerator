@@ -1,8 +1,4 @@
-{
-  hostname,
-  globals,
-  ...
-}:
+{ ... }:
 
 {
   imports = [
@@ -10,9 +6,8 @@
     ../../modules
   ];
 
-  networking.hostName = hostname;
-  networking.computerName = hostname;
-  system.defaults.smb.NetBIOSName = hostname;
+  # Hostname is MDM-assigned and deliberately left unmanaged -- setting
+  # networking.hostName / computerName here would fight the MDM profile.
 
   archetypes.workstation.enable = true;
 

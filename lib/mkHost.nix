@@ -29,6 +29,10 @@
         {
           nixpkgs.config.allowUnfree = true;
 
+          # Required by current nix-darwin: every user-scoped `system.defaults`
+          # option (dock, finder, NSGlobalDomain) errors out without it.
+          system.primaryUser = globals.user.name;
+
           nix.settings.experimental-features = [
             "nix-command"
             "flakes"
