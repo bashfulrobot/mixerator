@@ -32,6 +32,11 @@ in
 
     # Terminal utilities - Modern Rust replacements for classic Unix tools
     environment.systemPackages = with pkgs; [
+      # Build/task runner. Every workflow in this repo's justfile depends on
+      # it, and nothing else declared it -- the scaffold assumed the host
+      # already had it.
+      just
+
       # Interactive utilities
       gum # Glamorous shell scripts (prompts, inputs, spinners)
       glow # Markdown renderer

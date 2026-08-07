@@ -30,7 +30,7 @@ rebuild:
     # log, so a password prompt fired mid-command would be invisible.
     sudo -v || exit 1
     echo "Rebuilding nix-darwin configuration..."
-    sudo darwin-rebuild switch --flake {{host_flake}} &> "$log" || rc=$?
+    sudo "$(command -v darwin-rebuild)" switch --flake {{host_flake}} &> "$log" || rc=$?
     if [[ "$rc" -eq 0 ]]; then
         warnings=$(grep -c -E -i 'warning:' "$log" 2>/dev/null || true)
         if [[ "$warnings" -gt 0 ]]; then
@@ -71,7 +71,7 @@ upgrade:
     echo "Flake inputs updated"
     echo "Rebuilding with upgrades..."
     sudo -v || exit 1
-    sudo darwin-rebuild switch --flake {{host_flake}} &>> "$log" || rc=$?
+    sudo "$(command -v darwin-rebuild)" switch --flake {{host_flake}} &>> "$log" || rc=$?
     if [[ "$rc" -ne 0 ]]; then
         echo "Rebuild FAILED (exit $rc)"
         cat "$log"
@@ -119,7 +119,7 @@ quiet-rebuild:
     trap 'git restore --staged .' EXIT
     rc=0
     sudo -v || exit 1
-    sudo darwin-rebuild switch --flake {{host_flake}} &> {{rebuild_log}} || rc=$?
+    sudo "$(command -v darwin-rebuild)" switch --flake {{host_flake}} &> {{rebuild_log}} || rc=$?
     if [[ "$rc" -eq 0 ]]; then
         echo "Rebuild succeeded. Full log: {{rebuild_log}}"
     else
@@ -146,7 +146,7 @@ quiet-upgrade:
     sudo -v || exit 1
     {
         nix flake update
-        sudo darwin-rebuild switch --flake {{host_flake}}
+        sudo "$(command -v darwin-rebuild)" switch --flake {{host_flake}}
     } &> {{upgrade_log}} || rc=$?
     if [[ "$rc" -eq 0 ]]; then
         echo "Upgrade succeeded. Full log: {{upgrade_log}}"
