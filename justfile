@@ -26,8 +26,11 @@ rebuild:
     set -uo pipefail
     log="{{rebuild_log}}"
     rc=0
+    # Prime the sudo timestamp first. The rebuild sends both streams to the
+    # log, so a password prompt fired mid-command would be invisible.
+    sudo -v || exit 1
     echo "Rebuilding nix-darwin configuration..."
-    darwin-rebuild switch --flake {{host_flake}} &> "$log" || rc=$?
+    sudo darwin-rebuild switch --flake {{host_flake}} &> "$log" || rc=$?
     if [[ "$rc" -eq 0 ]]; then
         warnings=$(grep -c -E -i 'warning:' "$log" 2>/dev/null || true)
         if [[ "$warnings" -gt 0 ]]; then
@@ -67,7 +70,8 @@ upgrade:
     fi
     echo "Flake inputs updated"
     echo "Rebuilding with upgrades..."
-    darwin-rebuild switch --flake {{host_flake}} &>> "$log" || rc=$?
+    sudo -v || exit 1
+    sudo darwin-rebuild switch --flake {{host_flake}} &>> "$log" || rc=$?
     if [[ "$rc" -ne 0 ]]; then
         echo "Rebuild FAILED (exit $rc)"
         cat "$log"
@@ -114,7 +118,8 @@ quiet-rebuild:
     git add -A
     trap 'git restore --staged .' EXIT
     rc=0
-    darwin-rebuild switch --flake {{host_flake}} &> {{rebuild_log}} || rc=$?
+    sudo -v || exit 1
+    sudo darwin-rebuild switch --flake {{host_flake}} &> {{rebuild_log}} || rc=$?
     if [[ "$rc" -eq 0 ]]; then
         echo "Rebuild succeeded. Full log: {{rebuild_log}}"
     else
@@ -138,9 +143,10 @@ quiet-upgrade:
     echo "Upgrading (quiet mode)..."
     cp flake.lock flake.lock-backup-{{timestamp}}
     rc=0
+    sudo -v || exit 1
     {
         nix flake update
-        darwin-rebuild switch --flake {{host_flake}}
+        sudo darwin-rebuild switch --flake {{host_flake}}
     } &> {{upgrade_log}} || rc=$?
     if [[ "$rc" -eq 0 ]]; then
         echo "Upgrade succeeded. Full log: {{upgrade_log}}"
