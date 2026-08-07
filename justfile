@@ -158,6 +158,29 @@ quiet-upgrade:
         exit "$rc"
     fi
 
+# === Capture ===
+
+# Pull runtime Claude Code config changes back into the repo
+capture *args:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    if ! command -v claude-capture >/dev/null 2>&1; then
+        echo "claude-capture not on PATH -- run 'just rebuild' first (apps.cli.claude-code)."
+        exit 1
+    fi
+    echo "Capturing Claude Code config..."
+    claude-capture {{args}} || echo "Capture reported problems (see above)"
+    echo ""
+    echo "Review with: git status && git diff modules/apps/cli/claude-code"
+
+# Show what capture would change, without writing anything
+capture-dry:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    claude-capture --dry-run | jq -r '
+        "actions:", (.actions[].action),
+        "conflicts: \(.conflicts | length)"' | sort | uniq -c
+
 # === Aliases ===
 alias r := rebuild
 alias up := upgrade

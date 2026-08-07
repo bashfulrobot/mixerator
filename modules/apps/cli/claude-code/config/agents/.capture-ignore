@@ -1,0 +1,11 @@
+# Agents listed here (one filename per line, including .md) are silently
+# skipped by claude-capture. Use this for plugin-provided agents or any
+# other agent installed outside this repo that shouldn't be version-
+# controlled here.
+#
+# Format: one agent filename per line (match the file name under
+# ~/.claude/agents/, including .md extension). Comments start with '#'.
+# Blank lines are ignored.
+#
+# Empty on this host. nixerator's copy ignores reap-evolve.md, which comes
+# from the REAP plugin -- that plugin isn't deployed here.
