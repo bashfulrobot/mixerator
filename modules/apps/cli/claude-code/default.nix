@@ -52,48 +52,53 @@ in
       casks = [ "claude-code" ];
     };
 
-    home-manager.users.${globals.user.name} = {
-      home.packages = [ captureScript ];
+    # Written as a function so `lib` here is home-manager's extended lib, which
+    # is what carries `lib.hm.dag`. The `lib` in a nix-darwin module is plain
+    # nixpkgs lib and has no `hm` attribute.
+    home-manager.users.${globals.user.name} =
+      { lib, ... }:
+      {
+        home.packages = [ captureScript ];
 
-      # Files are COPIED, not symlinked into the store. Claude Code writes to
-      # settings.json (theme, enabledPlugins, skillOverrides) and may rewrite
-      # agents at runtime; a read-only store symlink would either break those
-      # writes or silently drift. Copies stay writable and `claude-capture`
-      # pulls deliberate changes back into git.
-      home.activation.claudeCodeConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        claude_home="${claudeHome}"
-        run mkdir -p "$claude_home/agents" "$claude_home/output-styles"
+        # Files are COPIED, not symlinked into the store. Claude Code writes to
+        # settings.json (theme, enabledPlugins, skillOverrides) and may rewrite
+        # agents at runtime; a read-only store symlink would either break those
+        # writes or silently drift. Copies stay writable and `claude-capture`
+        # pulls deliberate changes back into git.
+        home.activation.claudeCodeConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+          claude_home="${claudeHome}"
+          run mkdir -p "$claude_home/agents" "$claude_home/output-styles"
 
-        # GNU cp from nixpkgs: macOS ships BSD cp, which has no --no-preserve.
-        # Without it the copies inherit the store's read-only mode.
-        gcp="${pkgs.coreutils}/bin/cp --no-preserve=mode -f"
+          # GNU cp from nixpkgs: macOS ships BSD cp, which has no --no-preserve.
+          # Without it the copies inherit the store's read-only mode.
+          gcp="${pkgs.coreutils}/bin/cp --no-preserve=mode -f"
 
-        run $gcp "${configDir}/CLAUDE.md" "$claude_home/CLAUDE.md"
-        run $gcp "${configDir}/agents/"*.md "$claude_home/agents/"
-        run $gcp "${configDir}/output-styles/"*.md "$claude_home/output-styles/"
+          run $gcp "${configDir}/CLAUDE.md" "$claude_home/CLAUDE.md"
+          run $gcp "${configDir}/agents/"*.md "$claude_home/agents/"
+          run $gcp "${configDir}/output-styles/"*.md "$claude_home/output-styles/"
 
-        # settings.json: Nix owns every key it declares, the runtime keeps the
-        # rest. `jq -s '.[0] * .[1]'` deep-merges with the Nix side on the
-        # right, so declared objects win and declared arrays (the permission
-        # lists) replace wholesale rather than accumulating stale entries --
-        # while runtime-only keys like `theme` survive untouched.
-        if [ -z "''${DRY_RUN_CMD:-}" ]; then
-          rendered="$(mktemp)"
-          ${pkgs.gnused}/bin/sed \
-            -e 's|@USER_NAME@|${globals.user.name}|g' \
-            -e 's|@HOME_DIR@|${homeDir}|g' \
-            "${configDir}/settings.json" > "$rendered"
+          # settings.json: Nix owns every key it declares, the runtime keeps the
+          # rest. `jq -s '.[0] * .[1]'` deep-merges with the Nix side on the
+          # right, so declared objects win and declared arrays (the permission
+          # lists) replace wholesale rather than accumulating stale entries --
+          # while runtime-only keys like `theme` survive untouched.
+          if [ -z "''${DRY_RUN_CMD:-}" ]; then
+            rendered="$(mktemp)"
+            ${pkgs.gnused}/bin/sed \
+              -e 's|@USER_NAME@|${globals.user.name}|g' \
+              -e 's|@HOME_DIR@|${homeDir}|g' \
+              "${configDir}/settings.json" > "$rendered"
 
-          if [ -f "$claude_home/settings.json" ]; then
-            ${pkgs.jq}/bin/jq -s '.[0] * .[1]' \
-              "$claude_home/settings.json" "$rendered" > "$claude_home/settings.json.tmp"
-            mv "$claude_home/settings.json.tmp" "$claude_home/settings.json"
-          else
-            cp "$rendered" "$claude_home/settings.json"
+            if [ -f "$claude_home/settings.json" ]; then
+              ${pkgs.jq}/bin/jq -s '.[0] * .[1]' \
+                "$claude_home/settings.json" "$rendered" > "$claude_home/settings.json.tmp"
+              mv "$claude_home/settings.json.tmp" "$claude_home/settings.json"
+            else
+              cp "$rendered" "$claude_home/settings.json"
+            fi
+            rm -f "$rendered"
           fi
-          rm -f "$rendered"
-        fi
-      '';
-    };
+        '';
+      };
   };
 }

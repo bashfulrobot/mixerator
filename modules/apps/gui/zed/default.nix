@@ -22,33 +22,39 @@ in
     };
 
     home-manager.users.${globals.user.name} = {
+      # These belong to programs.zed-editor.extraPackages upstream, but that
+      # option asserts a non-null package -- and Zed comes from Homebrew here,
+      # so package must stay null. Installing them into the profile is
+      # equivalent for the servers Zed resolves off PATH; the ones pinned by
+      # store path in userSettings.lsp below don't care either way.
+      home.packages = with pkgs; [
+        # Language servers
+        ansible-language-server
+        bash-language-server
+        dockerfile-language-server
+        docker-compose-language-service
+        fish-lsp
+        gopls
+        golangci-lint-langserver
+        helm-ls
+        markdown-oxide
+        marksman
+        nil
+        nixd
+        rust-analyzer
+        taplo
+        terraform-ls
+        vscode-langservers-extracted # JSON/HTML/CSS/ESLint
+        yaml-language-server
+
+        # Formatters and linters
+        nixfmt
+        statix
+      ];
+
       programs.zed-editor = {
         enable = true;
         package = null; # Installed via Homebrew, not nix
-        extraPackages = with pkgs; [
-          # Language servers
-          ansible-language-server
-          bash-language-server
-          dockerfile-language-server
-          docker-compose-language-service
-          fish-lsp
-          gopls
-          golangci-lint-langserver
-          helm-ls
-          markdown-oxide
-          marksman
-          nil
-          nixd
-          rust-analyzer
-          taplo
-          terraform-ls
-          vscode-langservers-extracted # JSON/HTML/CSS/ESLint
-          yaml-language-server
-
-          # Formatters and linters
-          nixfmt
-          statix
-        ];
         extensions = [
           # Languages
           "basher"

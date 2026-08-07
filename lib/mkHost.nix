@@ -68,6 +68,7 @@
             }/bin/bash -c 'if [ -e \"$1\" ]; then mv -f \"$1\" \"$1.backup-$(date +%Y%m%d-%H%M%S)\"; ls -t \"$1\".backup-* 2>/dev/null | tail -n +6 | xargs -r rm -f; fi' --";
           };
         }
-      ] ++ extraModules;
+      ]
+      ++ extraModules;
     };
 }

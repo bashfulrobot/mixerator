@@ -25,7 +25,10 @@ in
         enable = true;
         package = null; # Installed via Homebrew, not nix
         enableFishIntegration = true;
-        installBatSyntax = true;
+        # Must stay false while package is null: the bat syntax file is pulled
+        # out of the ghostty derivation, which doesn't exist when the app comes
+        # from Homebrew. home-manager asserts on the combination.
+        installBatSyntax = false;
         settings = {
           window-decoration = false;
           window-padding-x = 20;
