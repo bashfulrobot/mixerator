@@ -19,6 +19,15 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # This machine runs Determinate Nix. Its determinate-nixd owns the daemon
+    # and /etc/nix/nix.conf, and nix-darwin refuses to activate alongside it
+    # unless told to stand down. This module is the supported way to do that:
+    # it disables nix-darwin's own Nix management and gives back a declarative
+    # settings surface via `determinateNix.customSettings`, written to
+    # /etc/nix/nix.custom.conf. The bare alternative, `nix.enable = false`,
+    # stands nix-darwin down but leaves no way to declare Nix settings at all.
+    determinate.url = "github:DeterminateSystems/determinate";
+
     # upsight, the Wails v3 + Svelte CSM desktop app. Private repo, so this
     # needs SSH read access -- same git+ssh arrangement nixerator uses.
     #

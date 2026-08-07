@@ -25,6 +25,7 @@
       modules = [
         ../hosts/${hostname}/configuration.nix
 
+        inputs.determinate.darwinModules.default
         inputs.home-manager.darwinModules.home-manager
         {
           nixpkgs.config.allowUnfree = true;
@@ -33,21 +34,18 @@
           # option (dock, finder, NSGlobalDomain) errors out without it.
           system.primaryUser = globals.user.name;
 
-          nix.settings.experimental-features = [
-            "nix-command"
-            "flakes"
-          ];
-
-          # Automatic garbage collection via launchd
-          nix.gc = {
-            automatic = true;
-            interval = {
-              Weekday = 0;
-              Hour = 2;
-              Minute = 0;
-            };
-            options = "--delete-older-than 14d";
-          };
+          # This machine runs Determinate Nix, whose determinate-nixd owns the
+          # daemon and /etc/nix/nix.conf. nix-darwin aborts activation
+          # alongside it unless its own Nix management stands down, which this
+          # module does -- it sets nix.enable = false itself, so the whole
+          # `nix.*` tree is off-limits from here.
+          #
+          # Settings go to determinateNix.customSettings instead, which lands
+          # them in /etc/nix/nix.custom.conf. Nothing was lost in the move:
+          # flakes and nix-command are Determinate defaults, and Determinate
+          # runs its own garbage collection rather than nix-darwin's launchd
+          # timer, so both settings this used to declare are now redundant.
+          determinateNix.enable = true;
 
           home-manager = {
             useGlobalPkgs = true;
