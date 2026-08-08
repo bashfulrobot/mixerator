@@ -3,43 +3,18 @@
   lib,
   pkgs,
   inputs,
-  globals,
   ...
 }:
 
 let
   cfg = config.apps.gui.upsight;
 
-  # Built here rather than taken from inputs.upsight.packages: that flake gates
-  # its packages behind isLinux, so there is no darwin output to consume. See
-  # build/default.nix for what differs from the upstream Linux derivation.
-  #
-  # Built against upsight's OWN pinned nixpkgs (nixos-26.05), not mixerator's
-  # unstable. Two reasons, one of them load-bearing:
-  #
-  #   1. Upstream pins it deliberately for reproducibility, and nixerator
-  #      likewise declines to make this input follow its nixpkgs.
-  #   2. The build needs pnpm 9 for a lockfileVersion 9.0 lockfile, and current
-  #      unstable marks pnpm 9.15.9 with ten CVEs, so evaluation refuses it. The
-  #      26.05 pin predates those advisories. This is a build-time fetch tool
-  #      running in a sandboxed FOD -- nothing from pnpm reaches the shipped
-  #      binary -- but it IS an unpatched pnpm, and the honest fix is upstream
-  #      moving to a pnpm the current nixpkgs still blesses. Scoping it here
-  #      beats a system-wide permittedInsecurePackages entry.
-  #
-  # The cost is a second nixpkgs in the eval closure.
-  upsightPkgs = import inputs.upsight.inputs.nixpkgs {
-    inherit (pkgs.stdenv.hostPlatform) system;
-  };
-
-  # Versions mirror upsight's own flake.nix. Keep them in step when bumping the
-  # input -- they are the app version stamped into the binary and the pinned
-  # wails3 CLI, neither of which is discoverable from the source tree.
-  upsight-pkg = upsightPkgs.callPackage ./build {
-    src = inputs.upsight;
-    version = "0.0.1";
-    wails3Version = "v3.0.0-beta.2";
-  };
+  # upsight's own flake now builds on darwin (see nix/upsight.nix there: macOS
+  # links the system WKWebView rather than WebKitGTK, so the Linux-only
+  # webview stack was never actually required on this platform, just unused).
+  # Consume the flake output directly -- same pattern nixerator's Linux module
+  # uses -- rather than maintaining a parallel derivation here.
+  upsight-pkg = inputs.upsight.packages.${pkgs.stdenv.hostPlatform.system}.default;
 in
 {
   options = {
@@ -47,8 +22,14 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    home-manager.users.${globals.user.name} = {
-      home.packages = [ upsight-pkg ];
-    };
+    # System-level, not home-manager.home.packages: nix-darwin's builtin
+    # `system.activationScripts.applications` only scans environment.
+    # systemPackages for Applications/*.app to link into
+    # /Applications/Nix Apps. home.packages is invisible to it, which is why
+    # the previous home-manager-only install never showed up in Launchpad/
+    # Spotlight -- only `upsight` on PATH.
+    environment.systemPackages = [
+      upsight-pkg
+    ];
   };
 }

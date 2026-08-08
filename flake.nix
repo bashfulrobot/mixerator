@@ -31,14 +31,14 @@
     # upsight, the Wails v3 + Svelte CSM desktop app. Private repo, so this
     # needs SSH read access -- same git+ssh arrangement nixerator uses.
     #
-    # Consumed for its SOURCE ONLY. Its flake gates `packages` behind
-    # `lib.optionalAttrs isLinux`, so `packages.aarch64-darwin` is empty and
-    # `inputs.upsight.packages.${system}.default` (what nixerator's module
-    # uses) does not exist here. The darwin derivation lives in
-    # modules/apps/gui/upsight/build/ instead.
+    # `inputs.upsight.packages.${system}.default` now builds on darwin (nix/
+    # upsight.nix splits on stdenv.hostPlatform: macOS links the system
+    # WKWebView instead of WebKitGTK), the same output nixerator's Linux module
+    # consumes, so modules/apps/gui/upsight here consumes it directly too --
+    # no more local build/ copy.
     #
     # No `inputs.nixpkgs.follows`: upsight pins nixos-26.05 deliberately for
-    # reproducibility, and we don't build from its package set anyway.
+    # reproducibility, and its flake output is already built against that pin.
     upsight = {
       url = "git+ssh://git@github.com/bashfulrobot/upsight?ref=main";
     };
