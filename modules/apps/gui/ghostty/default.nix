@@ -30,14 +30,14 @@ in
         # from Homebrew. home-manager asserts on the combination.
         installBatSyntax = false;
         settings = {
-          window-decoration = false;
-          window-padding-x = 20;
-          window-padding-y = 20;
+          window-decoration = true;
+          #window-padding-x = 20;
+          #window-padding-y = 20;
           scrollback-limit = 100000;
-          copy-on-select = "clipboard";
-          confirm-close-surface = false;
+          #copy-on-select = "clipboard";
+          #confirm-close-surface = false;
           cursor-style = "bar";
-          mouse-hide-while-typing = true;
+          #mouse-hide-while-typing = true;
         };
       };
     };
