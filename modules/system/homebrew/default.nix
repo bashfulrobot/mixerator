@@ -8,6 +8,10 @@ let
   cfg = config.system.homebrew-integration;
 in
 {
+  # Named homebrew-integration rather than the directory-mirroring
+  # `system.homebrew` deliberately -- nix-darwin already owns that namespace
+  # for the real top-level `homebrew.*` option tree this module configures
+  # below.
   options = {
     system.homebrew-integration.enable = lib.mkEnableOption "Homebrew integration for GUI apps not in nixpkgs";
   };

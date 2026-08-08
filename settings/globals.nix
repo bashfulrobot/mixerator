@@ -35,4 +35,10 @@ rec {
     # SSH public key for commit signing
     gitPubSigningKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICF9sPiX7zVCn+SW7bQpgS+dhUlVJYNktP6PO4mJWUJZ dustin@bashfulrobot.com";
   };
+
+  # 1Password
+  onePassword = {
+    # 1Password's dedicated SSH signing helper, used as git's gpg.ssh.program.
+    sshSignBin = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign";
+  };
 }
