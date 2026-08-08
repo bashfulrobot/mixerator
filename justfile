@@ -45,13 +45,14 @@ rebuild:
         exit "$rc"
     fi
 
-# Stage all, rebuild, unstage on exit
+# Stage all, rebuild, restore prior staged state on exit
 dev-rebuild:
     #!/usr/bin/env bash
     set -uo pipefail
     echo "Staging all changes..."
+    prev_index="$(git write-tree)"
     git add -A
-    trap 'git restore --staged .' EXIT
+    trap 'git read-tree "$prev_index"' EXIT
     just rebuild
 
 # Full system upgrade
@@ -115,8 +116,9 @@ quiet-rebuild:
     #!/usr/bin/env bash
     set -uo pipefail
     echo "Rebuilding (quiet mode)..."
+    prev_index="$(git write-tree)"
     git add -A
-    trap 'git restore --staged .' EXIT
+    trap 'git read-tree "$prev_index"' EXIT
     rc=0
     sudo -v || exit 1
     sudo "$(command -v darwin-rebuild)" switch --flake {{host_flake}} &> {{rebuild_log}} || rc=$?
@@ -183,6 +185,10 @@ capture *args:
 capture-dry:
     #!/usr/bin/env bash
     set -uo pipefail
+    if ! command -v claude-capture >/dev/null 2>&1; then
+        echo "claude-capture not on PATH -- run 'just rebuild' first (apps.cli.claude-code)."
+        exit 1
+    fi
     claude-capture --dry-run | jq -r '
         "actions:", (.actions[].action),
         "conflicts: \(.conflicts | length)"' | sort | uniq -c
