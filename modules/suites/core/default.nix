@@ -19,6 +19,11 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    # Git, signing and the surrounding tooling. Baseline rather than opt-in:
+    # this repo is the only way to change the machine, and every change to it
+    # is a commit.
+    apps.cli.git.enable = true;
+
     # Essential CLI tools available system-wide
     environment.systemPackages = with pkgs; [
       wget
