@@ -8,32 +8,32 @@
 
 ## Root cause
 
-Claude Code should be installed on macOS via the **Homebrew cask**
-(`claude-code@latest`), which this repo already declares in
-`modules/apps/cli/claude-code/default.nix`. If a different install method
-was ever used alongside it (npm global install, the curl/native installer
-script, or a Nix-built binary), you end up with two problems:
+This repo initially switched Claude Code to the Homebrew cask
+(`claude-code@latest`) to get it off a Nix-built binary, whose
+`/nix/store/<hash>-...` path changes on every rebuild and breaks macOS
+Keychain ACLs (a new store path looks like a different app to Keychain each
+time). That didn't fully resolve the issue on this machine, so the module now
+uses Anthropic's **native installer** instead -- which Anthropic's own docs
+label "Recommended" specifically because it manages a stable launcher path
+and self-updates without any package manager rewriting the binary.
 
-1. **Keychain not writable** -- macOS Keychain access grants are bound to a
-   specific binary's path/code signature. A Nix-built binary lives under
-   `/nix/store/<hash>-...`, and that hash changes on every rebuild/update, so
-   each new store path looks like a different app to Keychain and can't
-   reuse the previously granted "Claude Code-credentials" item. A
-   Homebrew-installed binary at a stable path doesn't have this problem.
-2. **Native binary not on PATH** -- multiple installs (e.g. a leftover
-   `~/.local/bin/claude` from the curl installer, or an npm global install)
-   compete on PATH, and whichever resolves first may not be the one
-   `claude doctor` expects.
+Whichever of these three install methods (native installer, Homebrew cask,
+npm global) is currently in place, having **more than one at once** is what
+actually causes both symptoms:
 
-Additionally, nix-darwin does not put Homebrew's bin dir (`/opt/homebrew/bin`)
-on `PATH` by default. This repo now sets that explicitly in
-`modules/system/homebrew/default.nix` via `environment.systemPath`, so
-PATH resolution no longer depends on shell-specific init order.
+1. **Keychain not writable** -- Keychain access grants are bound to a
+   specific binary's path/code signature. If the binary providing `claude`
+   keeps changing path out from under a previously-granted Keychain item
+   (Nix store churn, or two installs silently swapping which one PATH picks
+   up), Keychain can't match the request to the grant.
+2. **Native binary not on PATH** -- multiple installs compete on PATH, and
+   whichever resolves first may not be the one `claude doctor` expects.
 
 ## Steps to fix, on the Mac
 
 1. **Pull the latest changes** (or merge the `claude/mac-install-issues-gyoyf2`
-   branch) so `environment.systemPath` includes `/opt/homebrew/bin`.
+   branch) so the claude-code module installs via the native installer and
+   `environment.systemPath` includes `~/.local/bin`.
 
 2. **Find what's currently providing `claude`:**
 
@@ -42,21 +42,15 @@ PATH resolution no longer depends on shell-specific init order.
    type -a claude
    ```
 
-3. **Remove any non-Homebrew installs:**
+3. **Remove every other install method** so only the native installer remains:
 
    ```
    npm uninstall -g @anthropic-ai/claude-code   # if present
+   brew uninstall --cask claude-code@latest      # if present
+   brew uninstall --cask claude-code             # if present
    ```
 
-   If you ever ran the curl/native installer, remove its artifacts:
-
-   ```
-   rm -rf ~/.local/bin/claude ~/.local/share/claude
-   ```
-
-   (Check `claude doctor`'s output for the exact paths it flags first.)
-
-4. **Clear the stale Keychain item** so it isn't bound to the old binary:
+4. **Clear the stale Keychain item** so it isn't bound to a stale binary:
 
    - Keychain Access.app -> search "Claude Code" -> delete the item, or
    - `security delete-generic-password -s "Claude Code-credentials"`
@@ -67,17 +61,19 @@ PATH resolution no longer depends on shell-specific init order.
    just qr
    ```
 
-   This applies `apps.cli.claude-code.enable` (installs/updates the
-   `claude-code@latest` Homebrew cask) and the new `environment.systemPath`
-   entry for `/opt/homebrew/bin`.
+   This bootstraps the native installer (only if `~/.local/bin/claude`
+   doesn't already exist -- see `modules/apps/cli/claude-code/README.md`) and
+   sets `environment.systemPath` to include `~/.local/bin`.
 
 6. **Verify:**
 
    ```
-   which claude          # should resolve under /opt/homebrew/bin
+   which claude          # should resolve under ~/.local/bin
    claude doctor
    claude login
    ```
 
 If `claude doctor` still complains after this, re-check step 2/3 for a
-lingering install shadowing the Homebrew one on PATH.
+lingering install shadowing the native one on PATH -- both symptoms in this
+doc trace back to more than one install method being present at once, not to
+which method you pick.

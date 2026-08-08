@@ -12,7 +12,7 @@ carries a lot of NixOS-only machinery.
 | `~/.claude/CLAUDE.md` | Nix | copied writable |
 | `~/.claude/agents/*.md` | Nix, capture-able | copied writable |
 | `~/.claude/output-styles/*.md` | Nix, capture-able | copied writable |
-| the `claude-code` Homebrew cask | Nix | darwin has no nixpkgs build |
+| `~/.local/bin/claude` (native installer) | Nix bootstraps, then hands off | see below |
 
 Everything else under `~/.claude` (sessions, projects, caches, shell-snapshots,
 file-history, plugins/marketplaces) is runtime state and is left alone.
@@ -34,6 +34,26 @@ just capture         # apply, then review the git diff
 ```
 
 The first run has no snapshot and will need `just capture --bootstrap`.
+
+## Install method: native installer, not Homebrew
+
+Claude Code is installed via Anthropic's native installer
+(`curl -fsSL https://claude.ai/install.sh | bash`), triggered once by a
+home-manager activation script guarded on `~/.local/bin/claude` not already
+existing. It is deliberately **not** the Homebrew cask this module used
+before: a Homebrew- or Nix-managed binary's path/identity changes on every
+update, which was colliding with macOS Keychain ACLs (each new binary looked
+like a different app to Keychain) and with PATH resolution when multiple
+install methods coexisted. See `claude-fix.md` at the repo root for the full
+diagnosis.
+
+The native installer manages its own launcher symlink at `~/.local/bin/claude`
+into `~/.local/share/claude/versions/` and self-updates in the background from
+there -- Nix's job is only the first bootstrap. `environment.systemPath` in
+this module puts `~/.local/bin` on `PATH`. If you previously had the
+`claude-code`/`claude-code@latest` Homebrew cask installed, uninstall it
+(`brew uninstall --cask claude-code@latest`) so only one install method is on
+PATH at a time.
 
 ## Deliberately NOT ported from nixerator
 

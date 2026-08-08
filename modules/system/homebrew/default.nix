@@ -18,10 +18,10 @@ in
 
   config = lib.mkIf cfg.enable {
     # nix-darwin does not add Homebrew's bin dir to PATH on its own -- without
-    # this, resolution of brew-installed binaries (e.g. the claude-code cask)
-    # depends on shell-specific init order and can silently lose to a stale
-    # binary earlier on PATH. Declaring it here makes it unconditional across
-    # every shell nix-darwin manages, not just the interactive default.
+    # this, resolution of brew-installed binaries depends on shell-specific
+    # init order and can silently lose to a stale binary earlier on PATH.
+    # Declaring it here makes it unconditional across every shell nix-darwin
+    # manages, not just the interactive default.
     environment.systemPath = [ "/opt/homebrew/bin" ];
 
     homebrew = {
@@ -30,8 +30,8 @@ in
         # "none", deliberately. This repo is a record of what I chose to
         # install, not an enforcer. Kandji deploys apps outside brew and I
         # install things by hand between rebuilds; "zap" removes every
-        # undeclared cask *and its data* on the next switch, which would have
-        # taken out the claude-code cask on the very first rebuild.
+        # undeclared cask *and its data* on the next switch, which would take
+        # out anything installed by hand that isn't declared here.
         cleanup = "none";
 
         # Rebuilds stay fast and deterministic. Upgrading brew is an explicit
