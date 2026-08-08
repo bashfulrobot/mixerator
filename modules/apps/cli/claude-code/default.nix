@@ -47,9 +47,15 @@ in
     # Claude Code ships as a Homebrew cask on darwin (the nixpkgs derivation
     # nixerator uses is Linux-only). Declaring it here is also what keeps the
     # cask from being treated as undeclared drift.
+    #
+    # `@latest` tracks the latest release channel, so new versions land as soon
+    # as they ship. The plain `claude-code` cask tracks stable, which trails by
+    # about a week and skips releases with major regressions. Neither cask
+    # auto-updates -- `brew upgrade claude-code@latest` is the explicit act,
+    # matching `onActivation.upgrade = false` in the homebrew module.
     homebrew = {
       enable = true;
-      casks = [ "claude-code" ];
+      casks = [ "claude-code@latest" ];
     };
 
     # Written as a function so `lib` here is home-manager's extended lib, which
