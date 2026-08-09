@@ -13,8 +13,14 @@
   apps.gui.macwhisper.enable = true;
   apps.gui.tailscale.enable = true;
 
-  # Claude Code, with ~/.claude under Nix management + capture.
-  apps.cli.claude-code.enable = true;
+  # Native macOS Claude Code -- disabled, not deleted. Login is broken by
+  # the macOS 26 Keychain regression (anthropics/claude-code#70077) with no
+  # fix available from this repo; superseded by apps.cli.claude-container
+  # below, which runs Claude Code on Linux where credentials are a plain
+  # file instead of Keychain. Config/capture tooling stays in the repo in
+  # modules/apps/cli/claude-code in case the upstream bug gets fixed and
+  # native install is worth re-enabling.
+  apps.cli.claude-code.enable = false;
 
   # Colima-based Linux container running Claude Code, to work around the
   # macOS Keychain login bug (anthropics/claude-code#70077) -- see
