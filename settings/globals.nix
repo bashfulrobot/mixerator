@@ -12,6 +12,7 @@ rec {
   # Common repository and development paths
   paths = {
     devRoot = "${user.homeDirectory}/dev";
+    gitRoot = "${user.homeDirectory}/git";
     mixerator = "${user.homeDirectory}/git/mixerator";
   };
 
