@@ -8,6 +8,9 @@ let
   cfg = config.system.macos-defaults;
 in
 {
+  # Named macos-defaults rather than the directory-mirroring `system.defaults`
+  # deliberately -- nix-darwin already owns that namespace for the real
+  # dock/finder/NSGlobalDomain option tree this module writes into below.
   options = {
     system.macos-defaults.enable = lib.mkEnableOption "macOS system preference defaults";
   };

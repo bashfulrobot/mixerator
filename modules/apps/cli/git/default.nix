@@ -19,7 +19,7 @@ let
   # leaves the vault and the agent does not serve raw signature requests to
   # arbitrary callers -- pointing gpg.ssh.program here is what makes `git
   # commit -S` work, rather than relying on ssh-keygen reaching the agent.
-  opSshSign = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign";
+  opSshSign = globals.onePassword.sshSignBin;
 in
 {
   options = {

@@ -9,14 +9,14 @@ For each tracked file the script compares three states:
 
 and chooses one of these actions:
 
-    noop      H == R == S                           # nothing to do
-    capture   R == S and H != S                     # home was edited locally -> copy H to R
-    mirror    H == S and R != S                     # repo was updated -> copy R to H
-    import    H exists, R missing, S missing        # new manual install -> seed R from H
-    bootstrap R exists, H missing, S missing        # first run on a fresh host -> mirror R to H
-    delete    H == S and R missing (S present)      # tracked deletion from repo side -> remove H
-    refresh   H == R and S != H                     # both sides identical, refresh snapshot
-    conflict  H != R and H != S and R != S          # both sides diverged -> abort, surface
+    noop         H == R == S                        # nothing to do
+    capture      R == S and H != S                  # home was edited locally -> copy H to R
+    mirror       H == S and R != S                  # repo was updated -> copy R to H
+    import       H exists, R missing, S missing     # new manual install -> seed R from H
+    bootstrap    R exists, H missing, S missing     # first run on a fresh host -> mirror R to H
+    delete-home  H == S and R missing (S present)   # tracked deletion from repo side -> remove H
+    refresh      H == R and S != H                  # both sides identical, refresh snapshot
+    conflict     H != R and H != S and R != S       # both sides diverged -> abort, surface
 
 The snapshot file lives at <repo-config>/.capture-state.json and is committed
 to git so it travels across hosts. Conflicts are reported on stderr and

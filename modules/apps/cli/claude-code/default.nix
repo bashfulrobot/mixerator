@@ -27,12 +27,50 @@ let
       echo "  Set MIXERATOR_ROOT if the repo lives somewhere other than ${globals.paths.mixerator}." >&2
       exit 1
     fi
-    exec ${pkgs.python3}/bin/python3 \
+
+    # capture-sync.py's settings.json reconcile is capture-only and expects a
+    # CANONICALIZED home copy (see run_settings()'s docstring in
+    # cfg/scripts/capture-sync.py): activation writes home as
+    # jq-merge(home, sed(repo)) below, so a declared key's home value is
+    # always either verbatim repo content or repo content with
+    # @USER_NAME@/@HOME_DIR@ substituted -- never anything structurally new.
+    # Passing the raw live file here instead (as this used to) would compare
+    # against repo's still-templated placeholders and show "diverged" on
+    # every run, so capture would silently overwrite the repo template with
+    # rendered, placeholder-free content. Canonicalizing reverses that:
+    # project home onto repo's key shape (drops runtime-only keys like
+    # theme/enabledPlugins/skillOverrides) then substitute the literal
+    # values back to placeholders -- longest-match first, since
+    # ${homeDir} contains ${globals.user.name} as a substring.
+    if [ -f "${claudeHome}/settings.json" ]; then
+      canonical_settings="$(mktemp)"
+      trap 'rm -f "$canonical_settings"' EXIT
+      ${pkgs.jq}/bin/jq \
+        --slurpfile repo "$config_dir/settings.json" \
+        'def project(repo):
+           if (repo | type) == "object" and (. | type) == "object" then
+             with_entries(.key as $k | select(repo | has($k)) | .value |= project(repo[$k]))
+           else
+             .
+           end;
+         project($repo[0])' \
+        "${claudeHome}/settings.json" \
+        | ${pkgs.gnused}/bin/sed \
+            -e 's|${homeDir}|@HOME_DIR@|g' \
+            -e 's|${globals.user.name}|@USER_NAME@|g' \
+        > "$canonical_settings"
+    else
+      # Doesn't exist -- pass the path through as-is so sha256_file's
+      # exists() check (correctly) reports no home settings to capture.
+      canonical_settings="${claudeHome}/settings.json"
+    fi
+
+    ${pkgs.python3}/bin/python3 \
       "$repo/modules/apps/cli/claude-code/cfg/scripts/capture-sync.py" \
       --state-file "$config_dir/.capture-state.json" \
       --home-root "${claudeHome}" \
       --repo-root "$config_dir" \
-      --settings-home "${claudeHome}/settings.json" \
+      --settings-home "$canonical_settings" \
       --settings-repo "$config_dir/settings.json" \
       --section all \
       "$@"
@@ -44,19 +82,10 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # Claude Code ships as a Homebrew cask on darwin (the nixpkgs derivation
-    # nixerator uses is Linux-only). Declaring it here is also what keeps the
-    # cask from being treated as undeclared drift.
-    #
-    # `@latest` tracks the latest release channel, so new versions land as soon
-    # as they ship. The plain `claude-code` cask tracks stable, which trails by
-    # about a week and skips releases with major regressions. Neither cask
-    # auto-updates -- `brew upgrade claude-code@latest` is the explicit act,
-    # matching `onActivation.upgrade = false` in the homebrew module.
-    homebrew = {
-      enable = true;
-      casks = [ "claude-code@latest" ];
-    };
+    # ~/.local/bin, where the native installer's launcher symlink lives. Not
+    # /opt/homebrew/bin -- this install method is deliberately NOT the
+    # Homebrew cask (see the native-installer bootstrap below for why).
+    environment.systemPath = [ "${homeDir}/.local/bin" ];
 
     # Written as a function so `lib` here is home-manager's extended lib, which
     # is what carries `lib.hm.dag`. The `lib` in a nix-darwin module is plain
@@ -65,6 +94,27 @@ in
       { lib, ... }:
       {
         home.packages = [ captureScript ];
+
+        # Bootstrap-only install via Anthropic's native installer, not the
+        # Homebrew cask. The cask's binary/update cadence turned out to be the
+        # thing colliding with Keychain ACLs and PATH resolution on this
+        # machine (see claude-fix.md) -- the native installer manages a
+        # stable ~/.local/bin/claude launcher symlink into
+        # ~/.local/share/claude/versions/ and self-updates in the background,
+        # without Nix or Homebrew touching the binary at all.
+        #
+        # Guarded on the launcher already existing so this never re-runs on
+        # a normal `just qr` -- upgrades are user-initiated (see CLAUDE.md),
+        # and re-running the installer every activation would fight the
+        # native auto-updater over which version is current. Delete
+        # ~/.local/bin/claude to force a reinstall.
+        home.activation.claudeCodeInstall = lib.hm.dag.entryBefore [ "claudeCodeConfig" ] ''
+          if [ ! -e "${homeDir}/.local/bin/claude" ]; then
+            run ${pkgs.curl}/bin/curl -fsSL https://claude.ai/install.sh -o /tmp/claude-install.sh
+            run ${pkgs.bash}/bin/bash /tmp/claude-install.sh
+            run rm -f /tmp/claude-install.sh
+          fi
+        '';
 
         # Files are COPIED, not symlinked into the store. Claude Code writes to
         # settings.json (theme, enabledPlugins, skillOverrides) and may rewrite

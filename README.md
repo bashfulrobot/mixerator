@@ -6,6 +6,10 @@ Modular nix-darwin configuration with flakes and home-manager for macOS.
 
 Scaffold. Porting modules from [nixerator](https://github.com/bashfulrobot/nixerator).
 
+See [`claude-fix.md`](./claude-fix.md) for outstanding Claude Code
+keychain/PATH fix-up steps to run on-machine (not yet verified via a real
+`darwin-rebuild`).
+
 ## Quick Start
 
 ```bash
