@@ -16,6 +16,11 @@
   # Claude Code, with ~/.claude under Nix management + capture.
   apps.cli.claude-code.enable = true;
 
+  # Colima-based Linux container running Claude Code, to work around the
+  # macOS Keychain login bug (anthropics/claude-code#70077) -- see
+  # modules/apps/cli/claude-container.
+  apps.cli.claude-container.enable = true;
+
   # Built from source for darwin here; upstream's flake is Linux-only.
   apps.gui.upsight.enable = true;
 }
