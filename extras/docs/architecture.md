@@ -22,7 +22,7 @@ modules/
   suites/                       -- grouped bundles of modules (core, terminal)
   system/                       -- system-level config (macOS defaults, homebrew integration, fonts)
   archetypes/                    -- high-level host profiles that turn on suites + system modules
-secrets/                          -- git-crypt-encrypted secrets.json; empty/absent is a valid state
+secrets/                          -- gitignored secrets.json; empty/absent is a valid state
 extras/docs/                       -- this file
 ```
 
@@ -31,9 +31,9 @@ extras/docs/                       -- this file
 `flake.nix` pulls in `nixpkgs`, `nix-darwin`, `home-manager`, `apple-fonts`,
 `determinate` (Determinate Nix integration), and the private `upsight` flake.
 It loads `settings/globals.nix` and, if present, `secrets/secrets.json`
-(decrypted by git-crypt), then builds `lib = import ./lib { inherit inputs
-secrets; }`. Every host is declared under `darwinConfigurations` as a call to
-`lib.mkHost`.
+(gitignored, plaintext on disk only), then builds `lib = import ./lib
+{ inherit inputs secrets; }`. Every host is declared under
+`darwinConfigurations` as a call to `lib.mkHost`.
 
 ## `lib.mkHost`
 
