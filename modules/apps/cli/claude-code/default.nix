@@ -83,8 +83,9 @@ in
 
   config = lib.mkIf cfg.enable {
     # ~/.local/bin, where the native installer's launcher symlink lives. Not
-    # /opt/homebrew/bin -- this install method is deliberately NOT the
-    # Homebrew cask (see the native-installer bootstrap below for why).
+    # /opt/homebrew/bin -- the binary is deliberately NOT the Homebrew cask.
+    # This module does not install Claude Code at all; it only puts the
+    # installer's launcher on PATH and manages ~/.claude config.
     environment.systemPath = [ "${homeDir}/.local/bin" ];
 
     # Written as a function so `lib` here is home-manager's extended lib, which
@@ -95,27 +96,13 @@ in
       {
         home.packages = [ captureScript ];
 
-        # Bootstrap-only install via Anthropic's native installer, not the
-        # Homebrew cask. The cask's binary/update cadence turned out to be the
-        # thing colliding with Keychain ACLs and PATH resolution on this
-        # machine (see claude-fix.md) -- the native installer manages a
-        # stable ~/.local/bin/claude launcher symlink into
-        # ~/.local/share/claude/versions/ and self-updates in the background,
-        # without Nix or Homebrew touching the binary at all.
+        # The binary is NOT managed here. Claude Code is installed by hand with
+        # Anthropic's native installer (`curl -fsSL https://claude.ai/install.sh
+        # | bash`), which manages its own ~/.local/bin/claude launcher symlink
+        # into ~/.local/share/claude/versions/ and self-updates in the
+        # background. Nix owns ~/.claude config only, so nothing here can fight
+        # the native auto-updater over which version is current.
         #
-        # Guarded on the launcher already existing so this never re-runs on
-        # a normal `just qr` -- upgrades are user-initiated (see CLAUDE.md),
-        # and re-running the installer every activation would fight the
-        # native auto-updater over which version is current. Delete
-        # ~/.local/bin/claude to force a reinstall.
-        home.activation.claudeCodeInstall = lib.hm.dag.entryBefore [ "claudeCodeConfig" ] ''
-          if [ ! -e "${homeDir}/.local/bin/claude" ]; then
-            run ${pkgs.curl}/bin/curl -fsSL https://claude.ai/install.sh -o /tmp/claude-install.sh
-            run ${pkgs.bash}/bin/bash /tmp/claude-install.sh
-            run rm -f /tmp/claude-install.sh
-          fi
-        '';
-
         # Files are COPIED, not symlinked into the store. Claude Code writes to
         # settings.json (theme, enabledPlugins, skillOverrides) and may rewrite
         # agents at runtime; a read-only store symlink would either break those
