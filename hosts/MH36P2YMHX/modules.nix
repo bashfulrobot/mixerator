@@ -1,15 +1,15 @@
 { ... }:
 
 {
-  # Editors / writing
-  apps.gui.glide.enable = true;
-  apps.gui.zed.enable = true;
-  apps.gui.typora.enable = true;
+  # Editors / writing -- staged rollout, re-enabling one at a time.
+  apps.gui.glide.enable = false;
+  apps.gui.zed.enable = false;
+  apps.gui.typora.enable = false;
 
   # Installed by hand before this repo existed; declared here so the repo is a
   # record of what I actually chose. Everything else in /Applications was
   # deployed by Kandji and is deliberately left unmanaged.
-  apps.gui.rectangle-pro.enable = true;
+  apps.gui.rectangle-pro.enable = false;
   apps.gui.macwhisper.enable = true;
   apps.gui.tailscale.enable = true;
 
@@ -24,9 +24,9 @@
 
   # Colima-based Linux container running Claude Code, to work around the
   # macOS Keychain login bug (anthropics/claude-code#70077) -- see
-  # modules/apps/cli/claude-container.
-  apps.cli.claude-container.enable = true;
+  # modules/apps/cli/claude-container. Part of the staged rollout too.
+  apps.cli.claude-container.enable = false;
 
   # Built from source for darwin here; upstream's flake is Linux-only.
-  apps.gui.upsight.enable = true;
+  apps.gui.upsight.enable = false;
 }
