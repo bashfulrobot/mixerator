@@ -1,3 +1,7 @@
+# Secrets -- plaintext only, never committed (no encryption-at-rest; see
+# secrets/.gitkeep). Keep values out of git entirely instead.
+secrets/secrets.json
+
 # Flake lock backups
 flake.lock-backup-*
 
