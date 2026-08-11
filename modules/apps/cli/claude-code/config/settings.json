@@ -148,7 +148,8 @@
   "env": {
     "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-5",
     "SSH_AUTH_SOCK": "@HOME_DIR@/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock",
-    "PATH": "/etc/profiles/per-user/@USER_NAME@/bin:/run/current-system/sw/bin:/opt/homebrew/bin:${PATH}"
+    "PATH": "/etc/profiles/per-user/@USER_NAME@/bin:/run/current-system/sw/bin:/opt/homebrew/bin:${PATH}",
+    "DISABLE_AUTOUPDATER": "1"
   },
   "feedbackSurveyRate": 0,
   "feedbackDrafts": "off",
