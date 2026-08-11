@@ -25,6 +25,7 @@ in
     apps.cli = {
       fish.enable = true;
       starship.enable = true;
+      zoxide.enable = true;
     };
 
     # Fonts
@@ -40,6 +41,11 @@ in
       # Interactive utilities
       gum # Glamorous shell scripts (prompts, inputs, spinners)
       glow # Markdown renderer
+
+      # Fuzzy finder. Not optional decoration: the af/ff/copy fish functions
+      # (and the dormant kcfg/tcfg/kns) pipe through it, and every one of them
+      # was silently broken here because nothing declared it.
+      fzf
 
       # Modern Rust CLI tools
       bat # cat replacement with syntax highlighting
