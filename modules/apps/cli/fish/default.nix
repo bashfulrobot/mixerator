@@ -1,6 +1,7 @@
 {
   globals,
   lib,
+  pkgs,
   config,
   ...
 }:
@@ -17,6 +18,17 @@ in
 
     # Enable fish at system level (required for user shell)
     programs.fish.enable = true;
+
+    # Adds fish to /etc/shells. Without this, `chsh` refuses it ("non-standard
+    # shell") because macOS ships a stock /etc/shells listing only its own
+    # shells -- programs.fish.enable alone does not amend it.
+    #
+    # This does NOT change the login shell by itself. suites.core sets
+    # users.users.<name>.shell, but on darwin that is a no-op for an account
+    # nix-darwin does not create (this one predates the repo and is
+    # MDM-provisioned), so the switch is a one-time manual `chsh`. See
+    # extras/docs/user/fish.md.
+    environment.shells = [ pkgs.fish ];
 
     # Home Manager user configuration
     home-manager.users.${globals.user.name} = {
