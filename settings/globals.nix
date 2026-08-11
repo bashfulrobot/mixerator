@@ -28,7 +28,7 @@ rec {
     editor = "helix";
     shell = "fish";
     browser = "google-chrome";
-    terminal = "ghostty";
+    terminal = "alacritty";
   };
 
   # Git configuration

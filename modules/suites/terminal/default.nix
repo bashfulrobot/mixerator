@@ -19,7 +19,7 @@ in
 
   config = lib.mkIf cfg.enable {
     # Terminal emulator
-    apps.gui.ghostty.enable = true;
+    apps.gui.alacritty.enable = true;
 
     # Shell and prompt
     apps.cli = {
