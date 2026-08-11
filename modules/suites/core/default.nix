@@ -28,6 +28,12 @@ in
     environment.systemPackages = with pkgs; [
       wget
       curl
+
+      # macOS ships /usr/bin/jq, but its version tracks the OS release rather
+      # than anything this repo controls. Declaring it puts a known version
+      # ahead of the system one on PATH.
+      jq
+
       ripgrep
       fd
       bat

@@ -31,6 +31,11 @@ in
       git
       git-filter-repo
       mergiraf
+
+      # Forgejo's CLI, binary name `fj`. The forge-agnostic sibling of gh
+      # below; no home-manager module exists for it, so it is a plain package
+      # rather than a programs.* block.
+      forgejo-cli
     ];
 
     home-manager.users.${globals.user.name} = {
