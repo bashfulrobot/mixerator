@@ -28,7 +28,7 @@
   # Colima-based Linux container running Claude Code, to work around the
   # macOS Keychain login bug (anthropics/claude-code#70077) -- see
   # modules/apps/cli/claude-container. Part of the staged rollout too.
-  apps.cli.claude-container.enable = false;
+  apps.cli.claude-container.enable = true;
 
   # Built from source for darwin here; upstream's flake is Linux-only.
   apps.gui.upsight.enable = false;
