@@ -31,11 +31,17 @@ in
           command_timeout = 300;
           add_newline = false;
           format = "$custom$character";
-          right_format = "$all";
+
+          # Explicit, not "$all". The right prompt is limited to what actually
+          # changes how a command behaves -- where I am, what branch, whether
+          # the tree is dirty, which cluster, which host. Toolchain modules are
+          # disabled below rather than left to $all, which renders a symbol for
+          # every language it detects and turns the prompt into a status bar.
+          right_format = "$directory$git_branch$git_status$kubernetes$hostname";
 
           character = {
-            success_symbol = "[⦿](bold)";
-            error_symbol = "[⦿](bold red)";
+            success_symbol = "[❯](bold)";
+            error_symbol = "[❯](bold red)";
           };
 
           line_break.disabled = true;
@@ -74,50 +80,21 @@ in
             shell = "fish";
             ignore_timeout = true;
           };
-          rust = {
-            format = "[$symbol]($style)";
-            symbol = " ";
-          };
-          scala = {
-            format = "[$symbol]($style)";
-            symbol = " ";
-          };
-          nix_shell = {
-            format = "[$symbol$name ]($style)";
-            symbol = " ";
-          };
-          nodejs = {
-            format = "[$symbol]($style)";
-            symbol = " ";
-          };
-          golang = {
-            format = "[$symbol]($style)";
-            symbol = " ";
-          };
-          java = {
-            format = "[$symbol]($style)";
-            symbol = " ";
-          };
-          deno = {
-            format = "[$symbol]($style)";
-            symbol = " ";
-          };
-          lua = {
-            format = "[$symbol]($style)";
-            symbol = " ";
-          };
-          docker_context = {
-            format = "[$symbol]($style)";
-            symbol = " ";
-          };
-          python = {
-            format = "[$symbol]($style)";
-            symbol = " ";
-          };
-          cmd_duration = {
-            min_time = 500;
-            format = "took [$duration]($style) ";
-          };
+          # Toolchain detection off across the board. Which language a repo
+          # happens to contain is visible from the files; it does not need a
+          # symbol on every line. Disabling also skips the per-prompt probes
+          # these modules run.
+          rust.disabled = true;
+          scala.disabled = true;
+          nix_shell.disabled = true;
+          nodejs.disabled = true;
+          golang.disabled = true;
+          java.disabled = true;
+          deno.disabled = true;
+          lua.disabled = true;
+          docker_context.disabled = true;
+          python.disabled = true;
+          cmd_duration.disabled = true;
           kubernetes = {
             disabled = false;
             format = "[$symbol$context( \\($namespace\\))]($style) ";
