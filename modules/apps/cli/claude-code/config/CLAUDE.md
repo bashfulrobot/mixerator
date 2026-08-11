@@ -1,11 +1,5 @@
 # Global Instructions
 
-Ported from nixerator's `modules/apps/cli/claude-code/config/CLAUDE.md`. Rules
-that depended on Linux-only machinery (the Hyprland `text-polish` keybind, `rtk`
-output compression, `send-to-dustin`/wayland) are dropped rather than carried
-over dead. Rules whose detail lives in a nixerator doc keep the rule and point at
-the repo instead of a `/home/dustin/...` path that does not exist on this Mac.
-
 ## Writing — always humanize (hard rule)
 
 **Any prose I will read or send MUST be run through the `humanizer` skill before you present it.** This is non-negotiable and applies regardless of project, length, or register.
@@ -67,17 +61,6 @@ This Mac is enrolled in Kandji MDM and runs CrowdStrike Falcon. That constrains 
 - **Cite sources.** Every non-trivial claim needs a concrete reference — `file:line`, a command's output, a doc URL, or a spec. No hand-wavy recall.
 - **Flag uncertainty** inline with `ASSUMPTION:`, `UNVERIFIED:`, or `LOW CONFIDENCE:` rather than presenting a guess as fact.
 - **Break loops.** Two failed attempts at the same fix (or minor variants) means stop: tell me what you tried, what you observed, why it's not working, and 2-3 candidate pivots. Don't try a third variant silently.
-
-## Trigger-scoped rules (detail lives in skills or docs)
-
-These rules still bind; only the detail moved. Invoke the named skill before acting — don't work from the one-liner alone.
-
-- Before fixing any defect with an observable symptom, reproduce it as a failing test first — invoke `bug-fix-workflow`.
-- Before extracting a helper or abstraction, apply the three-occurrence DRY threshold — invoke `code-style`.
-- When `git status` shows unmerged paths or a PR reports conflicts, run `mergiraf solve` before hand-editing markers — invoke `merge-conflicts`.
-- When I say "git cleanup", "clean up the git stuff", or "wrap this branch up", that is standing authorization to commit, push, PR, squash-merge to `main`, and remove the worktree — invoke `git-cleanup`.
-- Before fetching anything from `developer.konghq.com`, append `.md` to the URL path — invoke `kong-docs-lookup`.
-- When writing a project `CLAUDE.md`, a `.claude/docs/` topic file, or deciding where durable knowledge belongs, follow the thin-CLAUDE.md protocol — invoke `curated-knowledge`.
 
 # Compact instructions
 
