@@ -68,7 +68,7 @@ in
               style = "Regular";
             };
             # bold/italic inherit `family` from normal when unset.
-            size = 13.0;
+            size = 15.0;
           };
 
           scrolling.history = 100000;
