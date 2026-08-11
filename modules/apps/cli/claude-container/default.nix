@@ -21,6 +21,12 @@ let
   # on the Mac's disk, just not the one macOS Claude Code touches.
   containerConfigDir = "${homeDir}/.claude-container";
 
+  # Same config/ tree as the native install (apps.cli.claude-code) -- CLAUDE.md,
+  # agents, output-styles, and settings.json are shared verbatim so both
+  # installs stay identical. Edit modules/apps/cli/claude-code/config/, not a
+  # copy here.
+  configDir = ../claude-code/config;
+
   containerName = "claude-host";
   containerImage = "ubuntu:24.04";
 
@@ -93,5 +99,47 @@ in
       pkgs.docker
       claudeContainerScript
     ];
+
+    # Written as a function so `lib` here is home-manager's extended lib, which
+    # is what carries `lib.hm.dag` -- see the identical note in
+    # apps.cli.claude-code. Declares ~/.claude-container the same way that
+    # module declares ~/.claude; no bidirectional capture here, so runtime
+    # drift inside the container's settings.json (e.g. theme) survives the
+    # jq merge below but is never pulled back into git.
+    home-manager.users.${globals.user.name} =
+      { lib, ... }:
+      {
+        home.activation.claudeContainerConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+          claude_home="${containerConfigDir}"
+          run mkdir -p "$claude_home/agents" "$claude_home/output-styles"
+
+          # GNU cp from nixpkgs: macOS ships BSD cp, which has no --no-preserve.
+          # Without it the copies inherit the store's read-only mode.
+          gcp="${pkgs.coreutils}/bin/cp --no-preserve=mode -f"
+
+          run $gcp "${configDir}/CLAUDE.md" "$claude_home/CLAUDE.md"
+          run $gcp "${configDir}/agents/"*.md "$claude_home/agents/"
+          run $gcp "${configDir}/output-styles/"*.md "$claude_home/output-styles/"
+
+          # settings.json: same deep-merge as apps.cli.claude-code -- Nix owns
+          # every key it declares, the runtime keeps the rest.
+          if [ -z "''${DRY_RUN_CMD:-}" ]; then
+            rendered="$(mktemp)"
+            ${pkgs.gnused}/bin/sed \
+              -e 's|@USER_NAME@|${globals.user.name}|g' \
+              -e 's|@HOME_DIR@|${homeDir}|g' \
+              "${configDir}/settings.json" > "$rendered"
+
+            if [ -f "$claude_home/settings.json" ]; then
+              ${pkgs.jq}/bin/jq -s '.[0] * .[1]' \
+                "$claude_home/settings.json" "$rendered" > "$claude_home/settings.json.tmp"
+              mv "$claude_home/settings.json.tmp" "$claude_home/settings.json"
+            else
+              cp "$rendered" "$claude_home/settings.json"
+            fi
+            rm -f "$rendered"
+          fi
+        '';
+      };
   };
 }
